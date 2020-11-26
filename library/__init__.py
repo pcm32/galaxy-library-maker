@@ -3,7 +3,7 @@ import yaml
 import logging
 import bioblend.galaxy
 
-class Library(object):
+class FileSystemLibrary(object):
     """
     Loads libraries encoded in YAML like:
 
@@ -53,7 +53,7 @@ class Library(object):
 
         libs = list()
         for lib in libs:
-            libs.append(Library(lib['library'], lib['base_dir'], lib['extensions'], bool(lib['recursive'])))
+            libs.append(FileSystemLibrary(lib['library'], lib['base_dir'], lib['extensions'], bool(lib['recursive'])))
 
         return libs
 
@@ -65,12 +65,52 @@ class Library(object):
             raise ValueError(f"Relative path {relative_path} not part of library")
 
 
+class LibraryGalaxyLocator(object):
+
+    def __init__(self, glib_contents):
+        self._glib_contents = glib_contents
+
+    def find_file(self, file_fs):
+        """
+        Searches a relative file path (relative to the base of the Galaxy lib) within a Galaxy library,
+        returning a dataset id if available or a list of folders to be added, plus the base folder where it should
+        be added in the library.
+
+        :param file_fs: the file system relative path to the file that needs to be located
+        :return: galaxy_dataset_id (if found - None otherwise), galaxy_library_folder_id, galaxy_missing_folders (list)
+          and galaxy_partial_folder_id
+        """
+        path, file = os.path.split(file_fs)
+        if path == ".":
+            path = "./"
+        galaxy_dataset_id = None
+        galaxy_library_folder_id = None
+        galaxy_partial_folder_id = None
+        galaxy_missing_folders = None
+        for file_g in self._glib_contents:
+            # compare to what is available in the galaxy library
+            # see if we find the file and the directory, or closest directory.
+            galaxy_path = "." + file_g['name']
+            if galaxy_path == file_fs and file_g['type'] == 'file':
+                galaxy_dataset_id = file_g['id']
+            if galaxy_path == path and file_g['type'] == 'folder':
+                galaxy_library_folder_id = file_g['id']
+            if path.startswith(galaxy_path) and file_g['type'] == 'folder':
+                missing_folders = path.replace(galaxy_path, "").split(os.path.sep)
+                if '' in missing_folders:
+                    missing_folders.remove('')
+                if not galaxy_partial_folder_id or len(galaxy_missing_folders) > len(missing_folders):
+                    galaxy_partial_folder_id = file_g['id']
+                    galaxy_missing_folders = missing_folders
+        return galaxy_dataset_id, galaxy_library_folder_id, galaxy_missing_folders, galaxy_partial_folder_id
+
+
 class LibraryGalaxyLoader(object):
     """
     Takes a list of Library objects, checks whether they are in the galaxy instance and loads them if not
     """
 
-    def __init__(self, gi: bioblend.galaxy, lib: Library):
+    def __init__(self, gi: bioblend.galaxy, lib: FileSystemLibrary):
         """
         Initializes for a galaxy instance
         :param gi:
@@ -78,6 +118,10 @@ class LibraryGalaxyLoader(object):
         self.gi = gi
         self.lib = lib
         self.existing = {}
+
+    def populate_galaxy_lib(self, dry_run=False):
+        self.__check_library_availability(create_if_missing=not dry_run)
+        self.__check_files_availability(create_if_missing=not dry_run)
 
     def __check_library_availability(self, create_if_missing=True):
         glibs = self.gi.libraries.get_libraries(name=self.lib.name)
@@ -103,15 +147,15 @@ class LibraryGalaxyLoader(object):
             glib = self.gi.libraries.create_library(name=self.lib.name, description=self.lib.desc, synopsis=self.lib.synopsis)
             self.lib.galaxy_lib = glib
 
-    def __check_file_availability(self, create_if_missing=True):
+    def __check_files_availability(self, create_if_missing=True):
         if not self.lib.galaxy_lib:
             logging.error(f"Galaxy lib is not defined, call __check_library_availability() with create_if_missing to true")
         glib_id = self.lib.galaxy_lib['id']
         glib_contents = self.gi.libraries.show_library(library_id=glib_id, contents=True)
+        lgl = LibraryGalaxyLocator(glib_contents)
         for file_fs in self.lib.files:
             # iterate over files declared in the YAML lib
-            galaxy_dataset_id, galaxy_library_folder_id, galaxy_missing_folders, galaxy_partial_folder_id = self.__find_file_in_galaxy_lib(
-                file_fs, glib_contents)
+            galaxy_dataset_id, galaxy_library_folder_id, galaxy_missing_folders, galaxy_partial_folder_id = lgl.find_file(file_fs)
 
             if not galaxy_dataset_id and create_if_missing:
                 logging.info(f"{file_fs} not present in the library, adding it..")
@@ -134,27 +178,6 @@ class LibraryGalaxyLoader(object):
                 glib_contents = self.gi.libraries.show_library(library_id=glib_id, contents=True)
             else:
                 logging.info(f"{file_fs} not present in Galaxy library, flag for creation is false, not creating it.")
-
-    def __find_file_in_galaxy_lib(self, file_fs, glib_contents):
-        path, file = os.path.split(file_fs)
-        galaxy_dataset_id = None
-        galaxy_library_folder_id = None
-        galaxy_partial_folder_id = None
-        galaxy_missing_folders = None
-        for file_g in glib_contents:
-            # compare to what is available in the galaxy library
-            # see if we find the file and the directory, or closest directory.
-            galaxy_path = "." + file_g['name']
-            if galaxy_path == file_fs and file_g['type'] == 'file':
-                galaxy_dataset_id = file_g['id']
-            if galaxy_path == path and file_g['type'] == 'folder':
-                galaxy_library_folder_id = file_g['id']
-            if galaxy_path.startswith(path) and file_g['type'] == 'folder':
-                missing_folders = path.replace(galaxy_path).split(os.path.sep)
-                if not galaxy_partial_folder_id or len(galaxy_missing_folders) > len(missing_folders):
-                    galaxy_partial_folder_id = file_g['id']
-                    galaxy_missing_folders = missing_folders
-        return galaxy_dataset_id, galaxy_library_folder_id, galaxy_missing_folders, galaxy_partial_folder_id
 
 
 
