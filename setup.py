@@ -11,7 +11,7 @@ print(find_packages())
 setup(
         name='galaxy-library-maker',
         version='0.0.1',
-        description='Traverse directories to create Galaxy libraries',
+        description='Traverses directories to create Galaxy libraries',
         long_description=readme(),
         packages=find_packages(),
         install_requires=['bioblend==0.14.0'],
