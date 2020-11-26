@@ -1,0 +1,9 @@
+---
+- library: 'Expression in NFS'
+  desc: 'Expression data stored in <TEMPLATE_DIR>/nfs'
+  synopsis: 'A lot of expression data'
+  base_dir: <TEMPLATE_DIR>/nfs
+  recursive: true
+  extensions:
+    - txt: txt
+    - gtf: GTF
