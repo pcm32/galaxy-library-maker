@@ -190,6 +190,7 @@ class LibraryGalaxyLoader(object):
                                                                 tags=None)
                 # refresh glib_contents since we added files and folders.
                 glib_contents = self.gi.libraries.show_library(library_id=glib_id, contents=True)
+                lgl = LibraryGalaxyLocator(glib_contents)
             else:
                 logging.info(f"{file_fs} not present in Galaxy library, flag for creation is false, not creating it.")
 
