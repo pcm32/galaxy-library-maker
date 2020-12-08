@@ -6,4 +6,4 @@
   recursive: true
   extensions:
     - txt: txt
-    - gtf: GTF
+    - gtf: gtf
