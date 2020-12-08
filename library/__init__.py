@@ -2,6 +2,7 @@ import os
 import yaml
 import logging
 import bioblend.galaxy
+from collections import ChainMap
 
 class FileSystemLibrary(object):
     """
@@ -29,15 +30,18 @@ class FileSystemLibrary(object):
         self.synopsis = synopsis
         self.base_dir = base_dir
         self.files = {}
+        self.rel_paths_for_galaxy = {}
         self.galaxy_lib = None
 
         for dirpath, dirs, files in os.walk(base_dir):
             for f in files:
                 filename, file_extension = os.path.splitext(f)
+                file_extension = file_extension.replace(".","")
                 if file_extension in extensions:
-                    files[os.path.join(dirpath, f)] = extensions[file_extension]
-                if not recursive:
-                    return
+                    rel_path = os.path.join(dirpath, f).replace(base_dir, ".")
+                    self.files[rel_path] = extensions[file_extension]
+            if not recursive:
+                return
 
     @staticmethod
     def read_from_yaml(path_yaml):
@@ -49,11 +53,16 @@ class FileSystemLibrary(object):
         """
 
         with open(path_yaml, mode='r') as libs_def:
-            libs_metadata = yaml.safe_load_all(libs_def)
-
-        libs = list()
-        for lib in libs:
-            libs.append(FileSystemLibrary(lib['library'], lib['base_dir'], lib['extensions'], bool(lib['recursive'])))
+            libs = list()
+            for libs_yaml in yaml.safe_load_all(libs_def):
+                for lib in libs_yaml:
+                    extensions = ChainMap(*lib['extensions'])
+                    libs.append(FileSystemLibrary(title=lib['library'],
+                                                  base_dir=lib['base_dir'],
+                                                  extensions=extensions,
+                                                  desc=lib['desc'],
+                                                  synopsis=lib['synopsis'],
+                                                  recursive=bool(lib['recursive'])))
 
         return libs
 
@@ -167,8 +176,9 @@ class LibraryGalaxyLoader(object):
                                                                                    folder_name=new_folder)[0]['id']
                     galaxy_library_folder_id = galaxy_partial_folder_id
 
+                path_for_loading = self.lib.absolute_path(file_fs)
                 self.gi.libraries.upload_from_galaxy_filesystem(library_id=glib_id,
-                                                                filesystem_paths=self.lib.absolute_path(file_fs),
+                                                                filesystem_paths=path_for_loading,
                                                                 folder_id=galaxy_library_folder_id,
                                                                 file_type=self.lib.files[file_fs],
                                                                 dbkey="?", link_data_only='link_to_files',
