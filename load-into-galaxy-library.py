@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 from bioblend.galaxy import GalaxyInstance
 from library import *
