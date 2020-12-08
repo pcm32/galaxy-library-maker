@@ -35,9 +35,13 @@ class FileSystemLibrary(object):
 
         for dirpath, dirs, files in os.walk(base_dir):
             for f in files:
-                filename, file_extension = os.path.splitext(f)
-                file_extension = file_extension.replace(".","")
-                if file_extension in extensions:
+                file_extension = None
+                # check through extensions, longest first
+                for ext in sorted(extensions.keys(), key=len, reverse=True):
+                    if f.endswith(ext):
+                        file_extension = ext
+                        break
+                if file_extension:
                     rel_path = os.path.join(dirpath, f).replace(base_dir, ".")
                     self.files[rel_path] = extensions[file_extension]
             if not recursive:
