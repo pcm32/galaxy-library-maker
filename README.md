@@ -76,6 +76,15 @@ You can have as many libraries on the same YAML, each one will become a separate
 where all files that respond to the extensions listed in `extensions` will be made available, in the same
 directory structure starting from the `base_dir`.
 
+How do I know which datatypes are available in my Galaxy instance to use in the extensions part?
+
+Galaxy datatypes are instance dependant and as such you need to know which datatypes are available in your instance.
+To do this, you can execute the `get-datatypes.py` script:
+
+```
+get-datatypes.py -C creds.yaml -G instance_a
+```
+
 ## Running
 
 Assuming the above examples are available in creds.yaml and libs_def.yaml, and that the Galaxy instance where

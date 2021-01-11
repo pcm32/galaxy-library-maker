@@ -18,6 +18,6 @@ setup(
         author='Pablo Moreno',
         long_description_content_type='text/markdown',
         author_email='',
-        scripts=['load-into-galaxy-library.py'],
+        scripts=['load-into-galaxy-library.py', 'get-datatypes.py'],
         license='MIT'
     )
