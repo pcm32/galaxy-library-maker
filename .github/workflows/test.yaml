@@ -25,4 +25,4 @@ jobs:
         python -m unittest library.tests.test_library
     - name: Integration test with containers
       run: |
-        run_tests_with_containers.sh
+        bash run_tests_with_containers.sh
