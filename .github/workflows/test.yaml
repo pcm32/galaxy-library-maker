@@ -21,6 +21,7 @@ jobs:
         bash set-test-venv.sh
     - name: Unitests
       run: |
+        source venv-test/bin/activate
         python -m unittest library.tests.test_library
     - name: Integration test with containers
       run: |
