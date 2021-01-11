@@ -1,0 +1,27 @@
+name: Python package
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install deps and package
+      run: |
+        bash set-test-venv.sh
+    - name: Unitests
+      run: |
+        python -m unittest library.tests.test_library
+    - name: Integration test with containers
+      run: |
+        run_tests_with_containers.sh
