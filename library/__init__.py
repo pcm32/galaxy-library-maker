@@ -160,7 +160,7 @@ class LibraryGalaxyLoader(object):
             glib = self.gi.libraries.create_library(name=self.lib.name, description=self.lib.desc, synopsis=self.lib.synopsis)
             self.lib.galaxy_lib = glib
 
-    def __check_files_availability(self, create_if_missing=True):
+    def __check_files_availability(self, create_if_missing=True, tag_using_filenames=False):
         if not self.lib.galaxy_lib:
             logging.error(f"Galaxy lib is not defined, call __check_library_availability() with create_if_missing to true")
         glib_id = self.lib.galaxy_lib['id']
@@ -186,7 +186,7 @@ class LibraryGalaxyLoader(object):
                                                                 folder_id=galaxy_library_folder_id,
                                                                 file_type=self.lib.files[file_fs],
                                                                 dbkey="?", link_data_only='link_to_files',
-                                                                roles="", preserve_dirs=False, tag_using_filenames=True,
+                                                                roles="", preserve_dirs=False, tag_using_filenames=tag_using_filenames,
                                                                 tags=None)
                 # refresh glib_contents since we added files and folders.
                 glib_contents = self.gi.libraries.show_library(library_id=glib_id, contents=True)
