@@ -5,21 +5,7 @@ process has access to (currently this is the only mechanism supported, more coul
 
 ## Installation
 
-Currently, a git clone + local pip install is required. We will add this to pypi soon.
-
-- Clone this repo and cd inside.
-- Create a python3 virtual environment:
-
-```
-python3 -m venv myVenvName
-source myVenvName/bin/activate
-pip install --upgrade pip
-pip install wheel
-```
-- Install this package
-```
-pip install .
-```
+You can install through `pip install galaxy-library-maker`. 
 
 ## Requirements for running
 
@@ -100,4 +86,22 @@ Make sure that you have docker installed and that you can execute it without sud
 
 ```
 bash run_tests_with_containers.sh
+```
+
+## Development installation
+
+If you are playing around with this and want to install your development version.
+
+- Clone this repo and cd inside.
+- Create a python3 virtual environment:
+
+```
+python3 -m venv myVenvName
+source myVenvName/bin/activate
+pip install --upgrade pip
+pip install wheel
+```
+- Install this package
+```
+pip install .
 ```
