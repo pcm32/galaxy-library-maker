@@ -177,6 +177,7 @@ class LibraryGalaxyLoader(object):
                     for new_folder in galaxy_missing_folders:
                         galaxy_partial_folder_id = self.gi.libraries.create_folder(library_id=glib_id,
                                                                                    base_folder_id=galaxy_partial_folder_id,
+                                                                                   description="Automatically created by upload tool"
                                                                                    folder_name=new_folder)[0]['id']
                     galaxy_library_folder_id = galaxy_partial_folder_id
 
